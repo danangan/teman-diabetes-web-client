@@ -19,6 +19,7 @@ class App extends Component {
 
       },
       fcmToken: '',
+      notifications: []
     }
     this.login = this.login.bind(this)
   }
@@ -27,15 +28,37 @@ class App extends Component {
 
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
-        // clear the timeout
+        // get auth token
         firebase
           .auth()
           .currentUser.getIdToken()
           .then(firebaseIdToken => {
             this.setState({authToken: firebaseIdToken}, () => {
-              // get the current user here
+              // set the current user
             })
           });
+
+        // registering the messaging event listener
+        firebase
+          .messaging()
+          .requestPermission()
+          .then(() => {
+          })
+          .catch((err) => {
+            console.log('permission rejected', err)
+          })
+
+        firebase
+          .messaging()
+          .onMessage(notification => {
+            console.log('notification item', notification)
+            this.setState({
+              notifications: [
+                ...this.state.notifications,
+                notification
+              ]
+            })
+          })
       }
     });
   }
@@ -53,16 +76,16 @@ class App extends Component {
     return (
       <div className="App">
         <header className="App-header">
-          <h1 className="App-title">Teman Diabetes Testing Web Platform</h1>
+          <h1 className="App-title">Teman Diabetes Testing - Production</h1>
         </header>
         <div className="App-content">
           <div className="Login-section">
             <h3>Login </h3>
-            <input 
+            <input
               placeholder="Email"
               value={this.state.email}
               onChange={(e) => { this.setState({email: e.target.value})}} />
-            <input 
+            <input
               placeholder="Password"
               type="password"
               value={this.state.password}
@@ -81,6 +104,15 @@ class App extends Component {
               <code className="AuthToken">
                 {this.state.authToken}
               </code>
+            </div>
+          }
+
+          {
+            <div>
+              <h3>Your Notification List</h3>
+              {
+                this.state.notifications.map(item => JSON.stringify(item, null, '\t'))
+              }
             </div>
           }
         </div>
